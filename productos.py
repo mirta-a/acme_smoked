@@ -24,8 +24,6 @@ tipos_salmon = {
     }
 }
 
-
-
 def agregar_producto(tipo, valor_venta, costo, stock):
     """Agrega un nuevo tipo de salmón a la base de datos."""
     if not tipo or not isinstance(valor_venta, (int, float)) or not isinstance(costo, (int, float)) or not isinstance(stock, int):

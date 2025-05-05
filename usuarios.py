@@ -24,6 +24,7 @@ def crear_usuarios():
 
 
 
+
     # Insertar nuevo usuario en la colección
     usuarios_col.insert_one(usuarios)
 
@@ -56,3 +57,6 @@ def eliminar_usuario(username):
     """Elimina un usuario de la base de datos."""
     result = usuarios_col.delete_one({"username": username})
     return result.deleted_count > 0
+
+if __name__ == "__main__":
+    crear_usuarios()
