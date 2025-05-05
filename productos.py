@@ -4,8 +4,9 @@ from data_base import get_database
 db = get_database()
 
 
-# Colección de productos
+# Colecciones
 productos_col = db["productos"]
+stock_col = db["stock"]
 
 # Configuración de los tipos de salmón
 tipos_salmon = {
@@ -75,3 +76,19 @@ def eliminar_producto(tipo):
     
     return True
 
+# crear stock inicial
+def crear_stock():
+    if stock_col.count_documents({}) == 0:
+        
+        salmones = [
+            {"tipo": "Atlántico", "precio_venta": 5000, "costo": 3000, "stock_kilos": 150},
+            {"tipo": "Nórdico", "precio_venta": 7000, "costo": 4500, "stock_kilos": 100},
+            {"tipo": "Pacífico", "precio_venta": 3000, "costo": 1500, "stock_kilos": 200}
+        ]
+        stock_col.insert_many(salmones)
+        print("Stock inicial creado.")
+    else:
+        print("Stock ya ingresado.")
+
+if __name__ == "__main__":
+       crear_stock()  

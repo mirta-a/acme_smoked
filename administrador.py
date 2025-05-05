@@ -47,7 +47,7 @@ def ver_pedidos():
 
 def ver_ganancias():
     """Muestra las ganancias por tipo de salmón."""
-    ganancias = generar_reporte_ganancias()  # Asegúrate de que esta función esté definida
+    ganancias = generar_reporte_ganancias()  #genera reporte de ganancias
     if not ganancias:
         print("No hay ganancias registradas.")
         return
