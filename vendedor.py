@@ -1,44 +1,77 @@
 from data_base import get_database
-from productos import crear_pedido, obtener_productos, actualizar_stock
+from usuarios import autenticar_usuario
+from productos import obtener_productos
 
 db = get_database()
+#colecciones
+pedidos_col = db["pedidos"]
+stock_col = db["stock"]
+productos_col = db["productos"]
+
+
+def menu_vendedor(usuario_id):
+    """Muestra el menú para el vendedor."""
+    while True:
+        print("\n--- Menú Vendedor ---")
+        print("1  Crar Pedido")
+        print("2  Mostrar Productos")
+        print("3  Cerrar Sesión")
+        
+        opcion = input("Seleccione una opción: ")
+        
+        if opcion == '1':
+            pedidos = {}
+            while True:
+                tipo = input("Ingrese el tipo de salmón (1  atlantico, 2  nordico, 3  pacifico) o 'salir' para terminar: ")
+                if tipo.lower() == 'salir':
+                    break
+                kilos = int(input(f"Ingrese la cantidad de kilos para {tipo}: "))
+                pedidos[tipo] = kilos
+            
+            try:
+                crear_pedido(usuario_id, pedidos)
+            except ValueError as e:
+                print(e)
+        
+        elif opcion == '2':
+            obtener_productos()
+        
+        elif opcion == '3':
+            print("Cerrando sesión...")
+            break
+        
+        else:
+            print("Opción no válida. Por favor, intente de nuevo.")
 
 
 
-def realizar_pedido(usuario_id, pedidos):
-    """
-    Realiza un nuevo pedido de salmón.
-    
-    :param usuario_id: ID del vendedor que realiza el pedido.
-    :param pedidos: Diccionario con los tipos de salmón y la cantidad en kilos.
-    """
-    # Verificar que el pedido tiene entre 1 y 3 tipos de salmón
-    if len(pedidos) < 1 or len(pedidos) > 3:
-        raise ValueError("El pedido debe contener entre 1 y 3 tipos de salmón.")
-    
-    # Obtener productos disponibles
-    productos_disponibles = obtener_productos()
-    tipos_disponibles = {producto['tipo']: producto for producto in productos_disponibles}
-    
-    # Verificar que todos los tipos de salmón en el pedido son válidos
+def crear_pedido(usuario_id, pedidos):
+    """Crea un nuevo pedido en la base de datos."""
+    pedido = {
+        "usuario_id": usuario_id,
+        "productos": pedidos,
+        "total": calcular_total(pedidos),
+        "estado": "pendiente"
+    }
+    pedidos_col.insert_one(pedido)
+
+def calcular_total(pedidos):
+
+    """Calcula el total de un pedido."""
+    total = 0
     for tipo, kilos in pedidos.items():
-        if tipo not in tipos_disponibles:
-            raise ValueError(f"Tipo de salmón '{tipo}' no disponible.")
-        if kilos <= 0:
-            raise ValueError("La cantidad de kilos debe ser mayor a cero.")
-        if tipos_disponibles[tipo]['stock'] < kilos:
-            raise ValueError(f"No hay suficiente stock para '{tipo}'. Stock disponible: {tipos_disponibles[tipo]['stock']}.")
-    
-    # Crear el pedido
-    crear_pedido(usuario_id, pedidos)
-    
-    # Actualizar el stock de cada tipo de salmón
-    for tipo, kilos in pedidos.items():
-        actualizar_stock(tipo, -kilos)
-    print("Pedido realizado exitosamente.")
+        producto = productos_col.find_one({"tipo": tipo})
+        if producto:
+            total += producto["valor_venta"] * kilos
+    return total
 
-def mostrar_productos():
-    """Muestra todos los productos de salmón disponibles."""
-    productos = obtener_productos()
-    for producto in productos:
-        print(f"Tipo: {producto['tipo']}, Precio por kilo: ${producto['valor_venta']}, Stock: {producto['stock']}")
+def obtener_productos():
+    """Obtiene la lista de productos disponibles."""
+    return list(productos_col.find())
+
+def actualizar_stock(tipo, cantidad):
+    """Actualiza el stock de un tipo de salmón."""
+    productos_col.update_one(
+        {"tipo": tipo},
+        {"$inc": {"stock": cantidad}}
+    )
